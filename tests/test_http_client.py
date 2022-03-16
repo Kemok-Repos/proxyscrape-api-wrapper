@@ -1,9 +1,10 @@
 """ Http client tests """
 
 import unittest
-from unittest.mock import patch
 import requests
+from unittest.mock import patch
 from client.http_client import HttpClient
+
 
 class TestHttpClient(unittest.TestCase):
     """  HttpClient test class """

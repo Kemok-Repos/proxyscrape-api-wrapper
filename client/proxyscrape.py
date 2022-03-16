@@ -1,23 +1,58 @@
 """ API Wrapper for Proxyscrape """
-import random
 from .http_client import HttpClient
+from multiprocessing.shared_memory import ShareableList
 
-class ProxyScrape:
+
+class ProxyScrapeClientV2:
     """ Base class to make API calls """
+
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.base_url = "https://api.proxyscrape.com/v2/account/datacenter_shared/"
+        self._proxy_data_name = f'ProxyScrapeData_{api_key}'
+        self.http = HttpClient("https://api.proxyscrape.com/v2/account/datacenter_shared/")
+        try:
+            self._proxy_data = ShareableList(name=self._proxy_data_name)
+        except:
+            self._proxy_data = None
+            self.load()
+
+    @property
+    def params(self):
+        return {
+            'type': 'getproxies',
+            'country': 'all',
+            'protocol': 'http',
+            'format': 'normal',
+            'auth': self.api_key
+        }
 
     def get_proxy_list(self):
+        response = self.http.get('proxy-list', self.params)
+        return response.text.split()
+
+    def load(self):
         """ Get a list of proxies """
-        params = {'type': 'getproxies', 'country': 'all',
-                'protocol': 'http', 'format': 'normal',
-                'auth': self.api_key}
+        if self._proxy_data:
+            self._proxy_data.shm.unlink()
 
-        response = HttpClient().request('GET', self.base_url+'proxy-list', params)
+        data = self.get_proxy_list() + [0]
+        self._proxy_data = ShareableList(data, name=self._proxy_data_name)
 
-        return response['text'].split()
+    def next_proxy(self, cyclic: bool = False) -> str:
+        """ returns the first ip not used previously,
+        if cyclic is true all ip was used then returns the first and start again
+        else if cyclic is false and all ip was used then start again after request ips"""
+        if not len(self._proxy_data):
+            self.load()
+        ip = self._proxy_data[self._proxy_data[-1]]
+        if self._proxy_data[-1] < 999:
+            self._proxy_data[-1] += 1
+        elif cyclic:
+            self._proxy_data[-1] = 0
+        else:
+            self.load()
+        return ip
 
-    def get_proxy(self):
-        """ Get a proxy from list """
-        return random.choice(self.get_proxy_list())
+    def __del__(self):
+        if self._proxy_data:
+            self._proxy_data.shm.close()

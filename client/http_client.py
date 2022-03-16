@@ -1,22 +1,30 @@
 """ Http client for requests """
-import requests
+from requests import Session
+
 
 class HttpClient:
     """ Base class to make http requests """
-    def __init__(self):
-        pass
+    def __init__(self, url_base: str = None, verbose: bool = False):
+        self.url_base = url_base
+        if url_base and not url_base.endswith('/'):
+            self.url_base += '/'
 
-    def request(self, verb:str, url:str, params:dict=None, custom_timeout:int=5):
-        """ Make a http request """
-        session = requests.Session()
-        session.params = params
+    def get(self, path: str, params: dict, timeout: int = None):
+        return self.request('GET', path, params, timeout)
 
-        try:
-            response = session.request(verb, url, timeout=custom_timeout)
-            response.raise_for_status()
-        except requests.exceptions.Timeout as error_t:
-            print("Timeout error:", error_t)
-        except requests.exceptions.RequestException as error_re:
-            print("Request error:", error_re)
+    def post(self, path: str, data: dict = None, timeout: int = None):
+        return self.request('POST', path, data, timeout)
 
-        return {'status_code': response.status_code, 'text': response.text}
+    def put(self, path: str, data: dict = None, timeout: int = None):
+        return self.request('PUT', path, data, timeout)
+
+    def delete(self, path: str, timeout: int = None):
+        return self.request('DELETE', path, timeout=timeout)
+
+    def request(self, method: str, path: str, data: dict = None, timeout: int = None):
+        if path.startswith('/'):
+            path = path[1:]
+        url = f"{self.url_base}{path}" if self.url_base else path
+        if method.lower().strip() == 'get':
+            return Session().request(method, url, params=data, timeout=timeout)
+        return Session().request(method, url, data=data, timeout=timeout)
