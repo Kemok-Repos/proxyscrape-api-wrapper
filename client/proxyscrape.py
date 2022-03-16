@@ -39,7 +39,9 @@ class ProxyScrapeClientV2:
         self._proxy_data = ShareableList(data, name=self._proxy_data_name)
 
     def next_proxy(self, cyclic: bool = False) -> str:
-        """ returns the first ip not used previously, if all ip was used then returns the first and start again """
+        """ returns the first ip not used previously,
+        if cyclic is true all ip was used then returns the first and start again
+        else if cyclic is false and all ip was used then start again after request ips"""
         if not len(self._proxy_data):
             self.load()
         ip = self._proxy_data[self._proxy_data[-1]]
