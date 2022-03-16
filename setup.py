@@ -3,6 +3,6 @@ from setuptools import find_packages
 
 setup(
     name="proxyscrape-api-wrapper",
-    version="0.0.1",
+    version="1.0.0",
     description="A simple Proxyscrape API wrapper"
 )
