@@ -1,26 +1,30 @@
 """ proxyscrape client tests """
 import unittest
-from unittest.mock import patch
-from client.proxyscrape import ProxyScrapeClientV2
+from unittest.mock import patch, Mock
+from proxyscrape.client import ProxyScrape
+
+TEST_API_KEY = '123'
+TEST_URL_BASE = 'http://localhost:4444'
+TEST_PROXY_LIST = ['127.0.0.1', 'localhost', '192.168.0.1']
 
 
 class TestHttpClient(unittest.TestCase):
     """  Proxyscrape test class """
+    def setUp(self) -> None:
+        self.client1 = ProxyScrape(TEST_API_KEY)
+        self.client2 = ProxyScrape(TEST_API_KEY)
+        self.client3 = ProxyScrape(TEST_API_KEY)
 
-    @patch('client.proxyscrape.ProxyScrapeClientV2.get_proxy_list')
-    def test_get_proxy_list_returns_a_dict(self, mock_get_proxy_list):
-        """ load set a list of proxies into the client """
-        mock_get_proxy_list.return_value = []
-        client = ProxyScrapeClientV2('123')
-        proxy_list = client.get_proxy_list()
+    @patch('proxyscrape.client.requests.get')
+    def test_get_proxy_list(self, mock_get):
+        mock_get.return_value = Mock(ok=True)
+        mock_get.return_value.headers = {'Content-Type': 'text/plain;charset=UTF-8'}
+        mock_get.return_value.text = ' '.join(TEST_PROXY_LIST)
 
-        self.assertIsInstance(proxy_list, list)
+        proxy_list = self.client1.get_proxy_list()
+        self.assertEqual(proxy_list, TEST_PROXY_LIST)
 
-    @patch('client.proxyscrape.ProxyScrapeClientV2.next_proxy')
-    def test_get_proxy_returns_a_str(self, mock_next_proxy):
-        """ get_proxy returns a random proxy from list """
-        mock_next_proxy.return_value = ''
-        client = ProxyScrapeClientV2('123')
-        proxy = client.next_proxy()
+    def test_shared_proxy_list(self):
+        self.assertEqual(self.client1.proxy, self.client2.proxy)
+        self.assertEqual(self.client3.next_proxy(), self.client1.proxy)
 
-        self.assertIsInstance(proxy, str)

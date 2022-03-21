@@ -1,2 +1,4 @@
 requests
+tinydb
 pytest
+nose
