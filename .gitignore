@@ -128,8 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Data
-db.json
-
-# pycharm
-.idea/*
+# state
+proxyscrape.json
