@@ -1,7 +1,6 @@
 """ API Wrapper for Proxyscrape """
 import requests
 from tinydb import TinyDB, Query
-from multiprocessing.shared_memory import ShareableList
 from tinydb.operations import increment, set
 
 
