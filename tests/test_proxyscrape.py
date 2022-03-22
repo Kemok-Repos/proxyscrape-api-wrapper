@@ -4,8 +4,7 @@ from unittest.mock import patch, Mock
 from proxyscrape.client import ProxyScrape
 
 TEST_API_KEY = '123'
-TEST_URL_BASE = 'http://localhost:4444'
-TEST_PROXY_LIST = ['127.0.0.1', 'localhost', '192.168.0.1']
+TEST_PROXY_LIST = ['127.0.0.1:80', '192.168.0.1:80']
 
 
 class TestHttpClient(unittest.TestCase):
@@ -18,13 +17,17 @@ class TestHttpClient(unittest.TestCase):
     @patch('proxyscrape.client.requests.get')
     def test_get_proxy_list(self, mock_get):
         mock_get.return_value = Mock(ok=True)
-        mock_get.return_value.headers = {'Content-Type': 'text/plain;charset=UTF-8'}
         mock_get.return_value.text = ' '.join(TEST_PROXY_LIST)
 
         proxy_list = self.client1.get_proxy_list()
         self.assertEqual(proxy_list, TEST_PROXY_LIST)
 
-    def test_shared_proxy_list(self):
+    @patch('proxyscrape.client.requests.get')
+    def test_shared_proxy_list(self, mock_get):
+        mock_get.return_value = Mock(ok=True)
+
+        mock_get.return_value.text = ' '.join(TEST_PROXY_LIST)
+
         self.assertEqual(self.client1.proxy, self.client2.proxy)
         self.assertEqual(self.client3.next_proxy(), self.client1.proxy)
 
