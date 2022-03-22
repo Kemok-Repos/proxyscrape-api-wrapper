@@ -44,11 +44,8 @@ class ProxyScrape:
     @property
     def proxy(self):
         """ returns the current selected proxy """
-        if not self._proxy_data:
-            try:
-                self._proxy_data = ShareableList(name=self._proxy_data_name)
-            except:
-                self.load()
+        if not self._proxy_data.all():
+            self.load()
         curr = self._proxy_data.search(Query().key == -1)[0]['current']
         return self._proxy_data.search(Query().key == curr)[0]['proxy']
 
