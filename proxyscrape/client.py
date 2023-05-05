@@ -1,4 +1,5 @@
 """ API Wrapper for Proxyscrape """
+import re
 import requests
 from tinydb import TinyDB, Query
 from tinydb.operations import increment, set
@@ -25,7 +26,13 @@ class ProxyScrape:
         }
 
     def get_proxy_list(self):
-        return requests.get(f'{self.url_base}/proxy-list', params=self.params).text.split()
+        def valid_ip(ip):
+            return bool(re.match(r'^(\d{1,3}\.){3}\d{1,3}:\d{2,4}$', ip))
+        res = requests.get(f'{self.url_base}/proxy-list', params=self.params)
+        li = res.text.split()
+        if all(list(map(valid_ip, li))):
+            return li
+        raise Exception(res.text)
 
     def load(self):
         """ update the internal snapshoot of proxies """
@@ -54,7 +61,7 @@ class ProxyScrape:
         if cyclic is true all ip was used then returns the first and start again
         else if cyclic is false and all ip was used then start again after request ips"""
         curr = self._proxy_data.search(Query().key == -1)[0]['current']
-        if curr < len(self._proxy_data.all()[:-1]):
+        if curr < len(self._proxy_data.all()[:-2]):
             self._proxy_data.update(increment('current'), Query().key == -1)
         elif self.cyclic:
             self._proxy_data.update(set('current', 0), Query().key == -1)
