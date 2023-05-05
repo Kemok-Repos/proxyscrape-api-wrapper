@@ -52,6 +52,7 @@ class ProxyScrape:
     def proxy(self):
         """ returns the current selected proxy """
         if not self._proxy_data.all():
+            print('Archivo proxyscrape.json vacío, cargando nueva lista de proxies...')
             self.load()
         curr = self._proxy_data.search(Query().key == -1)[0]['current']
         return self._proxy_data.search(Query().key == curr)[0]['proxy']
@@ -60,6 +61,9 @@ class ProxyScrape:
         """ advance to the next proxy in the local snapshot and return the value,
         if cyclic is true all ip was used then returns the first and start again
         else if cyclic is false and all ip was used then start again after request ips"""
+        if not self._proxy_data.all():
+            print('Archivo proxyscrape.json vacío, cargando nueva lista de proxies...')
+            self.load()
         curr = self._proxy_data.search(Query().key == -1)[0]['current']
         if curr < len(self._proxy_data.all()[:-2]):
             self._proxy_data.update(increment('current'), Query().key == -1)
